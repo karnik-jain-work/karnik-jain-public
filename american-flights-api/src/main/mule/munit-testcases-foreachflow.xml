@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="munit-testcases-foreachflowFlow" doc:id="770d8e57-5d9f-4c0d-b3b3-8c466598ee77" >
+		<http:listener doc:name="Listener" doc:id="30e87515-b3b9-4d1b-9e38-309daa41a864" config-ref="inbound-request" path="/path"/>
+		<ee:transform doc:name="Array of Items" doc:id="d21601c2-ca55-443a-b011-91ff88e37d04" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[1,2,3]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="e694797d-cbee-42a4-a08d-d9a1a79d523d" >
+			<set-variable value="#[attributes.uriParams]" doc:name="Build URI" doc:id="0ab90070-65d6-4987-81a6-35556a0e90d2" variableName="setUriParams"/>
+			<http:request method="GET" doc:name="Available Flights" doc:id="e936cf76-935a-4dea-811d-7a96e2cb4523" config-ref="HTTP_Request_configuration" path="x479c26mruiv9" >
+				<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"ID" : "vars.setUriParams"
+}]]]></http:uri-params>
+			</http:request>
+			<ee:transform doc:name="Concatenate Response" doc:id="8fa07a47-b3b2-45ae-b884-10183ba4976b" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="tmpArray" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.tmpArray default [] ++ [payload]]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<set-payload value="#[vars.tmpArray]" doc:name="Final Response" doc:id="cd870939-16b6-41a2-835f-ec3d9c71f428" />
+	</flow>
+</mule>

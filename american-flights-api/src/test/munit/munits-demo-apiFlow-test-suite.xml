@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+		<munit:config name="munits-demo-apiFlow-test-suite.xml" >
+		<munit:parameterizations >
+			<munit:parameterization name="choice-scope" >
+				<munit:parameters >
+					<munit:parameter propertyName="input" value="#[%dw 2.0 output application/json  --- readUrl('classpath://parabydwl\choice-param-choice-request.dwl')]" />
+					<munit:parameter propertyName="output" value="#[readUrl('classpath://parabydwl\choice-param-choice-response.dwl')]" />
+				</munit:parameters>
+			</munit:parameterization>
+			<munit:parameterization name="loop-scope" >
+				<munit:parameters >
+					<munit:parameter propertyName="input" value="#[%dw 2.0 output application/json  --- readUrl('classpath://parabydwl\choice-param-loop-request.dwl')]" />
+					<munit:parameter propertyName="output" value="#[readUrl('classpath://parabydwl\choice-param-loop-response.dwl')]" />
+				</munit:parameters>
+			</munit:parameterization>
+			<munit:parameterization name="default-scope" >
+				<munit:parameters >
+					<munit:parameter propertyName="input" value="#[%dw 2.0 output application/json  --- readUrl('classpath://parabydwl\choice-param-default-request.dwl')]" />
+					<munit:parameter propertyName="output" value="#[readUrl('classpath://parabydwl\choice-param-default-response.dwl')]" />
+				</munit:parameters>
+			</munit:parameterization>
+		</munit:parameterizations>
+	</munit:config>
+	<munit:test name="munits-demo-apiFlow-test-suite-munits-demo-apiFlowTest" doc:id="d34f02f3-a0b7-461a-a7f4-b075cc18db5c" description="Test" timeOut="1200000">
+		<munit:behavior >
+			<set-payload value="${input}" doc:name="Set Payload" doc:id="1ecd344a-51a4-421f-8b21-d00cae9bf76e" />
+			<munit:set-event doc:name="Set Event" doc:id="13c4a5b0-ac4f-45a8-8c61-9a6781949f5a" >
+				<munit:attributes value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;"rawRequestPath": payload,&#10;"queryParams": {&#10;"qParam": "AU"&#10;}}]' encoding="UTF-8" mediaType="application/json" />
+			</munit:set-event>
+			<munit-tools:mock-when doc:name="Mock Available Flights" doc:id="6163eceb-b1fa-45f2-9683-8b00e8667a1a" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Available Flights" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[1]" mediaType="application/java" encoding="UTF-8" />
+					<munit-tools:attributes value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  "headers": attributes.headers default {} ++ {},&#10;  "queryParams": attributes.queryParams default {} ++ {"destination": "SFO"},&#10;  "uriParams": attributes.uriParams default {} ++ {},&#10;  "rawRequestPath": attributes.rawRequestPath&#10;}]' mediaType="application/json" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="Mock Unavailable Flights" doc:id="e0e71ee1-a59e-45d8-8405-7fa15b2153c0" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Unavailable Flights" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#["Flights Unavailable"]' mediaType="application/java" encoding="UTF-8" />
+					<munit-tools:attributes value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  "headers": attributes.headers default {} ++ {},&#10;  "queryParams": attributes.queryParams default {} ++ {"destination": "SFO"},&#10;  "uriParams": attributes.uriParams default {} ++ {},&#10;  "rawRequestPath": attributes.rawRequestPath&#10;}]' mediaType="application/json" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to munits-demo-apiFlow" doc:id="62fa0460-81f3-4ea9-99d6-87b067d6b6c7" name="munits-demo-apiFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="987cae6a-ae26-41f1-a7ff-efeff281d591" actual="#[payload]" expected="${output}" message='#["Assertion failed: Payload not as expected"]'/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	   <sub-flow name="common-test-suite-choice-router-subFlow" doc:id="9a413acf-1e55-42c4-b13a-9b5b2ea336f5" >
+		<http:request method="GET" doc:name="Available Flights" doc:id="9cc2db21-6a42-4116-ae01-c67565974791" config-ref="HTTP_Request_configuration" path="x479c26mruiv9" >
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"destination" : "SFO"
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="e3eb2f34-d32c-45c1-b963-9ad1058f00ef">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="qParam"><![CDATA[%dw 2.0 
+output application/json
+---
+attributes.queryParams.qParam]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice">
+            <when expression="#[vars.qParam == 'AU']">
+                <!-- Handle AU -->
+                <!-- Transformation specific to AU -->
+				<flow-ref doc:name="Flow Reference" doc:id="b0522687-bcca-41be-b4ba-0a331437d71f" name="Australia"/>
+            
+</when>
+            <when expression="#[vars.qParam == 'NZ']">
+                <!-- Handle AU -->
+                <!-- Transformation specific to AU -->
+				<flow-ref doc:name="Flow Reference" doc:id="b7a082ae-a3a2-44d5-b18f-2f8307d37234" name="NewZeland"/>
+            
+</when>
+            <when expression="#[vars.qParam == 'IN']">
+                <!-- Handle AU -->
+                <!-- Transformation specific to AU -->
+				<flow-ref doc:name="Flow Reference" doc:id="4fcca54d-a4e0-4f75-a741-8ab11a968071" name="India"/>
+            
+</when>
+            <otherwise>
+                <!-- Default case -->
+				<ee:transform doc:name="Transform Message" doc:id="2b5cafc2-2003-4638-babb-2ebf41239a51" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Country not listed"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+            
+</otherwise>
+        </choice>
+	</sub-flow>
+	<sub-flow name="NewZeland" doc:id="dfc87623-926a-4dab-97f3-df190d05bb66" >
+		<ee:transform doc:name="Transform Message" doc:id="297f7ef1-3430-4e19-b576-97905edd9fd0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Commonwealth of New Zealand"
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="Australia" doc:id="e65c0a59-99aa-437e-b3b9-6c348c6b5d13" >
+			<ee:transform doc:name="Transform Message" doc:id="c70e826e-e1b9-45b7-b4c1-63cd4a10fcd8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Commonwealth of Australia"
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="India" doc:id="05fd9207-8903-4089-810e-f536f99b0d41" >
+		<ee:transform doc:name="Transform Message" doc:id="e7beb90f-f3f8-471e-b464-e4de8eac8fc0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Republic of India"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	
+</mule>

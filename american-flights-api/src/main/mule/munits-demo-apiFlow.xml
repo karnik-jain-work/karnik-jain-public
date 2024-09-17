@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="ea63dfb2-888b-43eb-a084-2e67e1fc1f36" />
+	<flow name="munits-demo-apiFlow" doc:id="cd28e2c9-0bbe-41e4-965c-fd049dcd77a8" >
+		<http:listener doc:name="Listener" doc:id="f67bc910-2b75-4cd0-abdb-7484e5e8b58b" config-ref="inbound-request" path="/api/v1/*"/>
+		<logger level="INFO" doc:name="Logger" doc:id="a9409121-89be-46ba-83bc-a16bef98a61a" />
+		<http:request method="GET" doc:name="Available Flights" doc:id="2cd4943a-ddd4-4c96-b9d6-7a62a3757171" config-ref="HTTP_Request_configuration" path="x479c26mruiv9" >
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"destination" : "SFO"
+}]]]></http:query-params>
+		</http:request>
+		<validation:is-number doc:id="0b051d08-0266-415b-8c10-eeb13328db66" config-ref="Validation_Config" numberType="INTEGER" value="#[payload]"/>
+		<http:request method="POST" doc:name="Unavailable Flights" doc:id="15fdee2c-ce91-4805-814e-0f92c6e77997" config-ref="HTTP_Request_configuration" path="s73de0330eyxr" />
+		<validation:is-not-blank-string doc:name="Is not blank string" doc:id="0f7e7e00-97da-4e67-a1e9-3e5c4d257dad" config-ref="Validation_Config"/>
+		<choice doc:name="Choice1" doc:id="1a71677a-a6e6-4308-bf77-fe7c13896082" >
+			<when expression='#[attributes.rawRequestPath == "/api/v1/choiceRouter"]' >
+				<flow-ref doc:name='Flow Reference to "api/v1/choiceRouter"' doc:id="2b07a22f-3aec-4ae8-af5f-1ca704ab9519" name="choiceRouter" />
+			</when>
+			<when expression='#[attributes.rawRequestPath == "/api/v1/loopScope"]' >
+				<flow-ref doc:name='Flow Reference to "/api/v1/loopScope"' doc:id="8eb50e83-4f7a-4fc8-9f0c-bb5321b546c6" name="loopScope" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="86b4a50f-28c8-41fe-84d4-681928ba7c11" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Invalid uri params"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<sub-flow name="choiceRouter" doc:id="731c0f83-db98-40de-8847-c651042e23b1" >
+		<ee:transform doc:name="Transform Message" doc:id="03b36bc1-da3f-4791-b008-ceb3b65337f8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Commonwealth of Australia"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="loopScope" doc:id="60da29a5-b1da-409b-a6d6-b38f168b35ac" >
+		<ee:transform doc:name="Transform Message" doc:id="1a2b5e28-3d43-46fb-a723-3e2649e4c79e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[{
+    "countryName": "People's Democratic Republic of Algeria",
+    "capital": "Algiers",
+    "region": "Africa"
+},
+{
+    "countryName": "Republic of Angela",
+    "capital": "Luanda",
+    "region": "Africa"
+},
+{
+    "countryName": "Republic of Benin",
+    "capital": "Porto-Novo",
+    "region": "Africa"
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

@@ -1,0 +1,12 @@
+aus:
+  input: "AU"
+  output: "Commonwealth of Australia"
+nz:
+  input: "NZ"
+  output: "Commonwealth of New Zealand"
+in:
+  input: "IN"
+  output: "Republic of India"
+def:
+  input: "default"
+  output: "Country not listed"

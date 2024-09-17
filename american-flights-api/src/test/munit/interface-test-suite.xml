@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="interface-test-suite.xml">
+		<munit:parameterizations file="apikit-error-params.yaml" />
+	</munit:config>
+	<munit:test
+		name="interface-test-suite-american-flights-api-main"
+		doc:id="4d2e0c5b-9a8d-4361-a66c-4b1427957d5a" description="Test"
+		timeOut="120000">
+		<munit:behavior>
+			<choice doc:name="Choice" doc:id="28329cf1-7c66-4a51-ae7b-645c352d3b11" >
+				<when expression="#[p('errorType')!=null]">
+					<munit-tools:mock-when doc:name="Mock APIKIT for Error Scenarios" doc:id="923db9c0-582f-4945-abda-7fa632698d8d" processor="${processor}">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute whereValue="american-flights-api-config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+						<munit-tools:then-return >
+							<munit-tools:error typeId='Mule::p("errorType")' />
+						</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+				</when>
+				<otherwise >
+					<munit-tools:mock-when doc:name="Mock APIKIT for Success Scenarios" doc:id="9fd67e95-6513-492d-9b20-4f05a3686c86" processor="${processor}" >
+						<munit-tools:with-attributes >
+							<munit-tools:with-attribute whereValue="american-flights-api-config" attributeName="config-ref" />
+						</munit-tools:with-attributes>
+						<munit-tools:then-return >
+							<munit-tools:variables >
+								<munit-tools:variable key="statusCode" value="200" mediaType="application/json" encoding="UTF-8" />
+							</munit-tools:variables>
+						</munit-tools:then-return>
+					</munit-tools:mock-when>
+				</otherwise>
+			</choice>
+		</munit:behavior>
+		<munit:execution>
+			<try doc:name="Try" doc:id="5274be69-8ea3-4f39-a3bb-7335b3ce3fe5">
+				<flow-ref doc:name="Flow-ref to american-flights-api-main"
+					doc:id="d1d67680-3ee1-4afb-b714-01cf3041d4d4"
+					name="${flowref}" />
+				<error-handler>
+					<on-error-continue enableNotifications="true"
+						logException="true" doc:name="On Error Continue"
+						doc:id="f35a8f9f-f032-404d-a3a3-e81fec1f7641" >
+						<logger level="INFO" doc:name="Logger" doc:id="2554f7d2-30fb-4da9-a76c-becfa992d5d4" message='logger Executed in on error continue : Attributes: #[attributes.statusCode as String default ""] ErrorCode #[error.errorType as String  default ""]'/>
+					</on-error-continue>
+				</error-handler>
+			</try>
+<!-- [STUDIO:"Flow-ref to american-flights-api-main"]			<flow-ref doc:name="Flow-ref to american-flights-api-main" doc:id="650b7126-256f-4284-93aa-73aa24f36182" name="${flowref}" /> [STUDIO] -->
+		</munit:execution>
+		<munit:validation>
+			<ee:transform doc:name="Transform Message"
+				doc:id="2bc56ed8-76da-431c-8351-5d4cfceb8acb">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="resStatCode"><![CDATA[%dw 2.0
+output application/json
+---
+Mule::p("statusCode")]]></ee:set-variable>
+					<ee:set-variable variableName="resMsg"><![CDATA[%dw 2.0
+output application/json
+---
+Mule::p("message")]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<munit-tools:assert-that
+				doc:name="Validate status code"
+				doc:id="ef0a012c-49d6-45e2-8b2c-306f8fa2a74a"
+				expression="#[vars.httpStatus as String]"
+				is="#[MunitTools::equalTo(vars.resStatCode)]"
+				message="#['Expected status Code did not match']" />
+			<munit-tools:assert-that
+				doc:name="Validate response message"
+				doc:id="f9140c70-266c-4cd2-902a-9f49df1dbbe9"
+				expression='#[payload."message"]'
+				is="#[MunitTools::equalTo(vars.resMsg)]"
+				message="#['Expected Response Message did not match']" />
+			<logger level="INFO" doc:name="Logger" doc:id="eb55c198-18e6-4c83-8bac-34aaca63398f" message='last logger Executed : statusCode: #[vars.httpStatus as String default ""] payloadMsg #[payload."message" as String  default ""]' />
+		
+</munit:validation>
+	</munit:test>
+<!-- [STUDIO:"american-flights-api-main-test"]	<munit:test name="american-flights-api-main-test" doc:id="9b12e527-6ad4-4a91-b674-0f065d2f885c" >
+		<munit:enable-flow-sources >
+			<munit:enable-flow-source value="american-flights-api-main" />
+		</munit:enable-flow-sources>
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock APIkit Router" doc:id="77d1041a-daef-4acd-9c56-a4b99348690e" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="117af192-583c-4a33-9d4e-cd300f86056e" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:attributes value='#[{"statusCode" : 200}&#93;' />
+				</munit-tools:then-return>
+			
+</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<http:listener doc:name="Listener" doc:id="f3f3471d-d939-4715-84b8-4ff2c1aac812" config-ref="inbound-request" path="/api/postFlights"/>
+			<flow-ref doc:name="Flow-ref to american-flights-api-main" doc:id="a21c6836-1a37-43e8-88c5-8642e4db5ffd" name="american-flights-api-main"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="384f34c7-0610-4cde-9483-6652490d6df4" is="#[MunitTools::equalTo(200)&#93;" expression="#[attributes.statusCode&#93;"/>
+		</munit:validation>
+	</munit:test> [STUDIO] -->
+</mule>

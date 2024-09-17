@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="   http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="munit-test-suite-yaml.xml">
+		<munit:parameterizations file="choice-params.yaml" />
+	</munit:config>
+	<munit:test description="Test" doc:id="39d48a1f-ee7e-429c-8867-0a42449469bb" name="munit-test-suite-common-test-suite-choice-router-subFlowTest">
+		<munit:behavior>
+			<set-variable value='#[%dw 2.0 output application/json&#10;--- &#10;{"attributes": {&#10;  "headers": {},&#10;  "queryParams": {"qParam": Mule::p("input")},&#10;  "uriParams": {}&#10;},&#10;payload: []&#10;}]' doc:name="Set mule event" doc:id="98f8ec20-a8cf-4bdf-960f-22d64d5dfc2f" variableName="mevent"/>
+			<munit:set-event doc:id="acc9a413-594d-482d-95c0-d149b92a5930" doc:name="Set Event">
+				<munit:variables >
+					<munit:variable key="mevent" value="#[vars.mevent]" encoding="UTF-8" mediaType="application/json" />
+				</munit:variables>
+			</munit:set-event>
+			<munit-tools:mock-when doc:name="Mock Available Flights" doc:id="e87512d3-40e7-45ab-8ccd-0e8728d8835b" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Available Flights" attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;vars.mevent.payload default [] ++ [&#10;    {&#10;        "ID": "2",&#10;        "code": "eefd0123",&#10;        "price": "300",&#10;        "departureDate": "2016-01-25 0:00:00",&#10;        "origin": "MUA",&#10;        "destination": "CLE",&#10;        "emptySeats": "7",&#10;        "plane": "Boeing 747",&#10;        "totalSeats": "345"&#10;    }&#10;]]' mediaType="application/json" encoding="UTF-8" />
+					<munit-tools:attributes value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;  "headers": vars.mevent.attributes.headers default {} ++ {},&#10;  "queryParams": vars.mevent.attributes.queryParams default {} ++ {"uParam": "abc"},&#10;  "uriParams": vars.mevent.attributes.uriParams default {} ++ {}&#10;}]' mediaType="application/json" encoding="UTF-8" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:id="1f466dfc-83df-40ab-9a7c-575ec144826a" doc:name="Flow-ref to common-test-suite-choice-router-subFlow" name="common-test-suite-choice-router-subFlow"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals actual="#[payload]" doc:id="0ad12f97-3afc-4afd-81ec-5121e7ddfa0f" doc:name="Assert equals" expected="#[Mule::p(&quot;output&quot;)]" message="#[&quot;Assertion Failed : Payload not as expected&quot;]"/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
